@@ -22,7 +22,7 @@ The most fundamental building block in fiber semantics is the event. Event is a 
 
 A line is an array created from one or more interleaved fibers. Events have header fields and a payload called DomainEvent. Events also has an implicit index which is their position on the array. Between migrations the array is locked in an append-only-log mode of operation. This guarantees full preservation of history between migrations. The singly linked list of each DomainId is intended to help identifying a fiber in the line without a full scan for the DomainId. This is intended to help any type of read operation for any DomainId to be near optimal in terms of speed and resource consumption, assuming a power law distribution of fiber lengths.
 
-<img width="761" alt="LineDatastructure" src="https://github.com/acje/Fiber-semantics/assets/23699032/5e3c38ab-f5ed-4fe4-b782-68301378021a">
+![LineDatastructure.png](Images%2FLineDatastructure.png)
 
 ## Auditable line migrations
 
@@ -42,8 +42,9 @@ Migrations that exclusively does keep-migrations do not require reindexing of th
 
 ## Statemachine
 
-<img width="1092" alt="Statemachine" src="https://github.com/acje/Fiber-semantics/assets/23699032/b10ef7b9-3090-49aa-bd33-a5347d18a28d">
+![Statemachine.png](Images%2FStatemachine.png)
 
 ## Example implementation: Pardosa
 
-<img width="829" alt="PardosaExample" src="https://github.com/acje/Fiber-semantics/assets/23699032/7586d841-4fc8-4516-926b-6666513d4f0c">
+Pardosa is an in-memory key-value storage layer which implements fiber semantics. TBD.
+![PardosaExample.png](Images%2FPardosaExample.png)
