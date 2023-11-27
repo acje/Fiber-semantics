@@ -3,24 +3,24 @@
 This document describes "Fiber semantics" a model for reasoning about a subset of "event driven architecture" where correctness, auditability and deletion policy are prioritized.
 
 ## Fiber
-A fiber is an ordered series of events about a single and unique DomainId. The DomainId may represent a single thing in categories such as an entity, activity or a property of an entity. Different categories of DomainIds allows for different concepts:
+A fiber is an ordered series of events about a single and unique DomainId forming a singly linked list starting with the most resent event. The DomainId may represent a single thing in categories such as an entity, activity or a property of an entity. Different categories of DomainIds allows for different concepts:
 - If the domainId identifies an entity we can refer to the fiber as the history of the entity with DomainId
 - If the domainId identifies an activity like a transaction ID we can refer to the fiber as a saga
 - If the domainId identifies a property of an entity we can refer to the fiber as a timeseries. This use case is currently not sentral to the design, but might work well.
 
-DomainIds are native to the domain and has a namespace for the DomainId. Multiple fibers within the same namespace can be stored and shared through a datastructure called a line. I line can only support one namespace, but a namespace can be sharded by domainId across multiple lines. Between migrations fibers can only be read, created, updated, detached (soft delete) and rescued (undeleted).
+DomainIds are native to the domain and has a namespace for the DomainId. Multiple fibers within the same namespace can be stored and shared through a datastructure called a line. In fiber semantics a line can only support one namespace, but a namespace can be sharded by domainId across multiple lines, keeping the fibers intact. Between migrations fibers can only be read, created, updated, detached (soft delete) or rescued (undeleted). Mutating operations happen in an append-only maner.
 
-Important concepts in fibers:
-- Event is a message containing a fact, something that has happened. Events are distinct from commands which may require a response of success or failure. Note: query is a command which only reads.
-- Timestamp is the time of the event in nanoseconds since the epoch
-- DomainId is the unique identifier of an entity, activity or property in the domain. Migrations can keep, purge or lock a detached the fiber of a domainId.
-- Detached marks the fiber as soft deleted
-- Precursor forms fibers by chaining events eith the same domainId in a singly linked list.
+The most fundamental building block in fiber semantics is the event. Event is a message containing a fact, something that has happened. Events are distinct from commands which may require a response of success or failure because they command something that should happen in the future. Note: In Fiber semantics query is a command which only does read type operations, query can also fail and the response is not optional. Events have a header with the following core consepts:
+
+- Timestamp is the time in nanoseconds since the epoch when the event was appended to the fiber
+- DomainId is the unique identifier of an entity, activity or property in the domain. 
+- Detached marks the fiber as soft deleted. Migrations can keep, purge or lock a detached fiber of a domainId.
+- Precursor forms fibers by chaining events with the same DomainId in a singly linked list.
 - DomainEvent is the domain spesific payload of the event.
 
 ## Line datastructure
 
-A line is an array created from one or more interleaved fibers which are singly linked lists of events with the same key. Events have header fields and a payload called domainevent. Events also has an implicit index which is their position on the array. Between migrations the array is locked in an append-only-log mode of operation. This guarantees full preservation of history between migrations. The singly linked list of each key is intended to help identifying a fiber in the line without a full scan for the key. This is intended to help any type of read operation for any key to be near optimal in terms of speed and resource consumption, assuming a power law distribution of keys.
+A line is an array created from one or more interleaved fibers. Events have header fields and a payload called DomainEvent. Events also has an implicit index which is their position on the array. Between migrations the array is locked in an append-only-log mode of operation. This guarantees full preservation of history between migrations. The singly linked list of each key is intended to help identifying a fiber in the line without a full scan for the key. This is intended to help any type of read operation for any key to be near optimal in terms of speed and resource consumption, assuming a power law distribution of keys.
 
 ## Auditable line migrations
 
