@@ -1,14 +1,14 @@
 # Fiber semantics
 
-This document describes "Fiber semantics" a model for reasoning about "event driven architecture".
+This document describes "Fiber semantics" a model for reasoning about a subset of "event driven architecture" where correctness, auditability and deletion policy are prioritized.
 
 ## Fiber
-A fiber is an ordered series of events about a domainId. The domainId may represent a single thing in categories such as an entity, activity or a property of an entity. Different categories of domainId allows for different concepts:
-- If the domainId identifies an entity we can refer to the fiber as a history
-- If the domainId identifies an activity like a transaction we can refer to the fiber as a saga
+A fiber is an ordered series of events about a single and unique DomainId. The DomainId may represent a single thing in categories such as an entity, activity or a property of an entity. Different categories of DomainIds allows for different concepts:
+- If the domainId identifies an entity we can refer to the fiber as the history of the entity with DomainId
+- If the domainId identifies an activity like a transaction ID we can refer to the fiber as a saga
 - If the domainId identifies a property of an entity we can refer to the fiber as a timeseries. This use case is currently not sentral to the design, but might work well.
 
-DomainIds are native to the domain and has a kind. Multiple fibers with the same kind can be stored and shared through a datastructure called a line. Between migrations fibers can only be read, created, updated, detached (soft delete) and rescued (undeleted).
+DomainIds are native to the domain and has a namespace for the DomainId. Multiple fibers within the same namespace can be stored and shared through a datastructure called a line. I line can only support one namespace, but a namespace can be sharded by domainId across multiple lines. Between migrations fibers can only be read, created, updated, detached (soft delete) and rescued (undeleted).
 
 Important concepts in fibers:
 - Event is a message containing a fact, something that has happened. Events are distinct from commands which may require a response of success or failure. Note: query is a command which only reads.
