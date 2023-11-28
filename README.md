@@ -2,6 +2,12 @@
 
 This document describes "Fiber semantics" a model for reasoning about a subset of "event driven architecture" where correctness, auditability and deletion policy are prioritized. The goal is to enable Event Carried State Transfer, ECST in a maintainable manner for complex domains.
 
+## Audit log and data-products
+In fiber semantics an audit log is optional and implemented same as the data-product, but typically with same or more strict constraints. This means they both use events, fibers and lines as described here, but are kept as separate storage items. 
+
+## Assumptions
+Key assumption in fiber semantics is that the producer can not know the needs of the consumer. This applies to functional and operational needs. Therefore, it is important to choose constraints carefully such that enough freedom is left to implementation, while being clear on semantics.
+
 ## Fiber
 A fiber is an ordered series of events about a single and unique DomainId forming a singly linked list starting with the most resent event. The DomainId may represent a single thing in categories such as an entity, activity or a property of an entity. Different categories of DomainIds allows for different concepts:
 - If the domainId identifies an entity we can refer to the fiber as the history of the entity with DomainId
@@ -12,11 +18,13 @@ DomainIds are native to the domain and has a namespace for the DomainId. Multipl
 
 The most fundamental building block in fiber semantics is the event. Event is a message containing a fact, something that has happened. Events are distinct from commands which may require a response of success or failure because they command something that should happen in the future. Note: In Fiber semantics query is a command which only does read type operations, query can also fail and the response is not optional. Events have a header with the following core concepts:
 
-- Timestamp is the time in nanoseconds since the epoch when the event was appended to the fiber
-- DomainId is the unique identifier of an entity, activity or property in the domain. 
+- Timestamp is the time in nanoseconds since the epoch. Timestamp is set when the event is successfully appended to the fiber and is considered immutable.
+- DomainId is the unique identifier of an entity, activity or property in the domain. DomainId is immutable. 
 - Detached marks the fiber as soft deleted. Migrations can keep, purge or lock a detached fiber of a domainId.
 - Precursor forms fibers by chaining events with the same DomainId in a singly linked list.
 - DomainEvent is the domain specific payload of the event.
+
+Immutable fields in the event header still may get purged or pruned together with the complete event during migrations. The other header fields will get updated during migrations. The DomainEvent payload is only mutated during migrations with schema upgrades.
 
 ## Line datastructure
 
