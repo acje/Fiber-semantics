@@ -46,5 +46,8 @@ Migrations that exclusively does keep-migrations do not require reindexing of th
 
 ## Example implementation: Pardosa
 
-Pardosa is an in-memory key-value storage layer which implements fiber semantics. TBD.
+Pardosa is an in-memory key-value storage layer which implements fiber semantics. Pardosa maintains pointers to the most resent event in every fiber in a hashmap. Also, the concept of an anchor is there to improve som worst case read operations, but the current implementation with anchoring at the start must be replaced with anchoring at (Fiber.len modulo n) to be effective. Doubly linked lists could also be maintained, but the gain would be questionable with better anchoring. Pardosa is TBD.
 ![PardosaExample.png](Images%2FPardosaExample.png)
+
+## Foundational concepts
+Fiber semantics is relying on language and model concepts form Domain Driven Design and Actor Model, not to be confused with any actor model framework. It´s a work in progress to link these models.
