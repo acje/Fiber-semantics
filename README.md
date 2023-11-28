@@ -3,7 +3,7 @@
 This document describes "Fiber semantics" a model for reasoning about a subset of "event driven architecture" where correctness, auditability and deletion policy are prioritized. The goal is to enable Event Carried State Transfer, ECST in a maintainable manner for complex domains.
 
 ## Audit log and data-products
-In fiber semantics an audit log is optional and implemented same as the data-product, but typically with same or more strict constraints. This means they both use events, fibers and lines as described here, but are kept as separate storage items. 
+In fiber semantics an audit log is optional and implemented same as the data-product, but typically with same or more strict constraints during migrations. This means they both use events, fibers and lines as described here, but are kept as separate storage items. 
 
 ## Assumptions
 Key assumption in fiber semantics is that the producer can not know the needs of the consumer. This applies to functional and operational needs. Therefore, it is important to choose constraints carefully such that enough freedom is left to implementation, while being clear on semantics.
