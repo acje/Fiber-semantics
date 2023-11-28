@@ -36,7 +36,7 @@ For each detached fiber the following logic is possible during migrations:
 - Migrate(LockAndPrune) Fiber is pruned back to only having its last event. Key can not be created, but rescue is possible, however the history will be lost. Line reindexing needed.
 - Migrate(Purge)
 
-For each fiber that is not detached the default migration is "Keep". TODO: PruneAttached policy which only keeps the last n, n>0 events. This could be implemented based on timestamp, history depth or line index.
+For each fiber that is not detached the default migration is "Keep". TODO: PruneAttached policy which only keeps the last n, n>0 events of each fiber. This could be implemented based on timestamp, history depth or line index.
 
 Migrations that exclusively does keep-migrations do not require reindexing of the line. These may still do schema upgrades. All other migrations will require line reindexing, which means moving events up the line as free indexes are created and updating all precursors to the new indexes of the previous events in the fibers.
 
@@ -46,7 +46,7 @@ Migrations that exclusively does keep-migrations do not require reindexing of th
 
 ## Example implementation: Pardosa
 
-Pardosa is an in-memory key-value storage layer which implements fiber semantics. Pardosa maintains pointers to the most resent event in every fiber in a hashmap. Also, the concept of an anchor is there to improve som worst case read operations, but the current implementation with anchoring at the start must be replaced with anchoring at (Fiber.len modulo n) to be effective. Doubly linked lists could also be maintained, but the gain would be questionable with better anchoring. Pardosa is TBD.
+Pardosa is an in-memory key-value storage layer which implements fiber semantics. Pardosa maintains pointers to the most resent event in every fiber in a hashmap. Also, the concept of an anchor is there to improve some worst case read operations, but the current implementation with anchoring at the start must be replaced with anchoring at (Fiber.len modulo n) to be effective. Doubly linked lists could also be maintained, but the gain would be questionable with better anchoring. Pardosa is TBD.
 ![PardosaExample.png](Images%2FPardosaExample.png)
 
 ## Foundational concepts
