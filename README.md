@@ -18,14 +18,13 @@ Domain identity such as `OrderId`, `AccountId`, `DeviceId`, `SagaId`, or `TraceI
 
 Multiple fibers within the same namespace can be stored and shared through a datastructure called a `Dragline`. 
 
-In fiber semantics a `Dragline` can only support one namespace, but a namespace can be sharded by FiberId across multiple `Draglines`, keeping the fibers intact. Between migrations fibers can only be created, read, updated, detached (soft delete) or rescued (undeleted). Dragline and fibers are append-only between migrations.
+In fiber semantics a `Dragline` can only support one namespace, but a namespace can be sharded by `FiberId` across multiple `Draglines`, keeping the fibers intact. Between migrations fibers can only be created, read, updated, detached (soft delete) or rescued (undeleted). Dragline and fibers are append-only between migrations.
 
 The most fundamental building block in fiber semantics is the event. Event is a message containing a fact, something that has happened. Events are distinct from commands which may require a response of success or failure because they command something that should happen in the future. Note: In Fiber semantics query is a command which only does read type operations, query can also fail and the response is not optional. Events have a header with the following core concepts:
 
-- Timestamp is the time in nanoseconds since the epoch. Timestamp is set when the event is successfully appended to the fiber and is considered immutable.
-- DomainId is the unique identifier of an entity, activity or property in the domain. DomainId is immutable. 
-- Detached marks the fiber as soft deleted. Migrations can keep, purge or lock a detached fiber of a domainId.
-- Precursor forms fibers by chaining events with the same DomainId in a singly linked list.
+- ``FiberId`` is the unique identifier of a series of connected events conserning an entity, activity or property in the domain. Application must choose mapping.
+- Detached marks the fiber as soft deleted. Migrations can keep, purge or lock a detached fiber of a `FiberId`.
+- Precursor forms fibers by chaining events with the same `FiberId` in a singly linked list.
 - DomainEvent is the domain specific payload of the event.
 
 Immutable fields in the event header still may get purged or pruned together with the complete event during migrations. The other header fields will get updated during migrations. The DomainEvent payload is only mutated during migrations with schema upgrades.
@@ -69,7 +68,7 @@ DeviceId -> current telemetry fiber
 The index is not an independent source of truth. It is derived from, or checked against, the append-only log. If an index becomes inconsistent, the log wins and the index must be rebuilt or rejected.
 
 ## Dragline datastructure
-A Dragline is an array created from one or more interleaved fibers. Events have header fields and a payload called DomainEvent. Events also has an implicit index which is their position on the array. Between migrations the array is locked in an append-only-log mode of operation. This guarantees full preservation of history between migrations. The singly linked list of each DomainId is intended to help identifying a fiber in the Dragline without a full scan for the DomainId. This is intended to help any type of read operation for any DomainId to be near optimal in terms of speed and resource consumption, assuming a power law distribution of fiber lengths.
+A Dragline is an array created from one or more interleaved fibers. Events have header fields and a payload called DomainEvent. Events also has an implicit index which is their position on the array. Between migrations the array is locked in an append-only-log mode of operation. This guarantees full preservation of history between migrations. The singly linked list of each `FiberId` is intended to help identifying a fiber in the Dragline without a full scan for the `FiberId`. This is intended to help any type of read operation for any `FiberId` to be near optimal in terms of speed and resource consumption, assuming a power law distribution of fiber lengths.
 
 ![LineDatastructure.png](Images%2FLineDatastructure.png)
 
@@ -89,7 +88,7 @@ For each fiber that is not detached the default migration is "Keep". TODO: Prune
 Migrations that exclusively does keep-migrations do not require reindexing of the Dragline. These may still do schema upgrades. All other migrations will require Dragline reindexing, which means moving events up the Dragline as free indexes are created and updating all precursors to the new indexes of the previous events in the fibers.
 
 ## Statemachine
-NOTE: state `PURGED` can be eliminated by consollidating into state `UNDEFINED`. Transition `Rescue()` from state `LOCKED` is no longer needed as we have properly decoupled DomainID from FiberID in new design.
+NOTE: state `PURGED` can be eliminated by consollidating into state `UNDEFINED`. Transition `Rescue()` from state `LOCKED` is no longer needed as we have properly decoupled DomainID from `FiberId` in new design.
 
 ![Statemachine.png](Images%2FStatemachine.png)
 
