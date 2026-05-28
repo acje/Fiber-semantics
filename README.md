@@ -16,9 +16,7 @@ Applications may use fibers to model entity histories, sagas, causal workflows, 
 
 Domain identity such as `OrderId`, `AccountId`, `DeviceId`, `SagaId`, or `TraceId` belongs in the event payload or application schema.
 
-Multiple fibers within the same namespace can be stored and shared through a datastructure called a `Dragline`. 
-
-In fiber semantics a `Dragline` can only support one namespace, but a namespace can be sharded by `FiberId` across multiple `Draglines`, keeping the fibers intact. Between migrations fibers can only be created, read, updated, detached (soft delete) or rescued (undeleted). Dragline and fibers are append-only between migrations.
+Multiple fibers can be stored and shared through a datastructure called a `Dragline`. Between migrations fibers can only be created, read, updated, detached (soft delete) or rescued (undeleted). Dragline and fibers are append-only between migrations.
 
 The most fundamental building block in fiber semantics is the event. Event is a message containing a fact, something that has happened. Events are distinct from commands which may require a response of success or failure because they command something that should happen in the future. Note: In Fiber semantics query is a command which only does read type operations, query can also fail and the response is not optional. Events have a header with the following core concepts:
 
