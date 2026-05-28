@@ -1,5 +1,4 @@
 # Fiber semantics
-
 This document describes "Fiber semantics" a model for reasoning about a subset of "event driven architecture" where correctness, auditability and deletion policy are prioritized. The goal is to enable Event Carried State Transfer, ECST in a maintainable manner for complex domains.
 
 ## Audit log and data-products
@@ -9,7 +8,6 @@ In fiber semantics an audit log is optional and implemented same as the data-pro
 Key assumption in fiber semantics is that the producer can not know the needs of the consumer. This applies to functional and operational needs. Therefore, it is important to choose constraints carefully such that enough freedom is left to implementation, while being clear on semantics.
 
 ## Fiber
-
 A **fiber** is an ordered replay scope within a log. It is the sequence of events the runtime treats as one local continuity for append, checked replay, precursor validation, and application-level reconstruction.
 
 A fiber is not the same thing as a domain identifier. Its identity is log-local runtime identity: a handle meaningful inside the Dragline or log that allocated it.
@@ -32,14 +30,50 @@ The most fundamental building block in fiber semantics is the event. Event is a 
 
 Immutable fields in the event header still may get purged or pruned together with the complete event during migrations. The other header fields will get updated during migrations. The DomainEvent payload is only mutated during migrations with schema upgrades.
 
-## Dragline datastructure
+## Application causality keys
+An application may choose a **causality key**: a domain value used to decide which fiber or fibers are relevant for a business concept.
 
+Examples:
+- `OrderId` for an order history,
+- `PaymentId` for a payment saga,
+- `AccountId` for account-related activity,
+- `DeviceId` for device telemetry,
+- `TraceId` or `CorrelationId` for workflow causality.
+
+The application owns the meaning of this key. Pardosa does not treat the key as substrate identity and does not require every application to choose the same kind of key.
+
+A causality key may map to:
+- one current fiber,
+- many historical fibers,
+- a set of related saga fibers,
+- a projection state,
+- or no fiber yet.
+
+## Fiber indexes
+Pardosa may provide an optional typed mapping from application-owned causality keys to log-local fiber handles.
+The application owns the key semantics. Pardosa owns index consistency, rebuildability, and lookup performance.
+
+Conceptually:
+```rust
+CausalityKey<K> -> FiberHandle(s)
+```
+
+Examples:
+```rust
+OrderId -> current order fiber
+AccountId -> many account activity fibers
+SagaId -> saga fiber
+DeviceId -> current telemetry fiber
+```
+
+The index is not an independent source of truth. It is derived from, or checked against, the append-only log. If an index becomes inconsistent, the log wins and the index must be rebuilt or rejected.
+
+## Dragline datastructure
 A Dragline is an array created from one or more interleaved fibers. Events have header fields and a payload called DomainEvent. Events also has an implicit index which is their position on the array. Between migrations the array is locked in an append-only-log mode of operation. This guarantees full preservation of history between migrations. The singly linked list of each DomainId is intended to help identifying a fiber in the Dragline without a full scan for the DomainId. This is intended to help any type of read operation for any DomainId to be near optimal in terms of speed and resource consumption, assuming a power law distribution of fiber lengths.
 
 ![LineDatastructure.png](Images%2FLineDatastructure.png)
 
 ## Auditable Dragline migrations
-
 "Domains can be messy"
 
 The purpose of migrations is to simultaneously enable auditability, schema upgrades and deletion policies. Dragline migrations do however not take responsibility for how the audit log is maintained, but rather provides for an audit log to have a lossless view of any Dragline version by writing the new version of the Dragline as a separate datastructure with all kept events from the previous version. A consumer of the latest version of the Dragline can choose to forget old schemas and deleted data by reading the latest version and doing a compare or a full reload of the state carried by the Dragline. An audit log would typically only contain events in their original version, causing it to contain all versions of events across the full audit log. If audit log is enabled it should be appended simultaneously with the current Dragline version, and hence old Dragline versions could be deleted once the migration is complete since the audit log retains all events in their original schema. Note that schema migrations will cause the Dragline to diverge from the audit log. Be careful about how domain information is changed during migrations with schema upgrades. Doing schema upgrades may be subject to law and regulations in the domain. A migration should never touch the audit log. Between migrations a system with audit log enabled should only do appends.
