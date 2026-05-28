@@ -1,5 +1,5 @@
-# Doccument scope: Fiber semantics
-This document describes "Fiber semantics" a model for reasoning about a subset of "event driven architecture" where correctness, auditability and deletion policy are prioritized. The goal is to enable Event Carried State Transfer, ECST in a maintainable manner for complex domains.
+# Fiber semantics
+This document describes "Fiber semantics" a model for reasoning about a subset of "event driven architecture" where correctness, auditability and deletion policy are prioritized. The goal is to enable Event Carried State Transfer, ECST in a maintainable manner for complex domains. Document is also the semantic authority for example implementation Pardosa's fiber, migration, and processing model.
 
 ## Audit log and data-products
 In fiber semantics an audit log is optional and implemented same as the data-product, but typically with same or more strict constraints during migrations. This means they both use events, fibers and Draglines as described here, but are kept as separate storage items. Audit logs are typically derived from the dataproduct by a separate component or service.
