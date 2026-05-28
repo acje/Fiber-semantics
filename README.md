@@ -1,4 +1,4 @@
-# Fiber semantics
+# Doccument scope: Fiber semantics
 This document describes "Fiber semantics" a model for reasoning about a subset of "event driven architecture" where correctness, auditability and deletion policy are prioritized. The goal is to enable Event Carried State Transfer, ECST in a maintainable manner for complex domains.
 
 ## Audit log and data-products
@@ -71,6 +71,19 @@ Pardosa distinguishes three read views:
 - **causal chain** — walk same-fiber precursor links from a known head event;
 - **cursor tail** — consume the global log line with ACK/resume state.
 These views are intentionally not interchangeable. Cursor progress is not fiber history, not causal history, and not evidence of per-fiber completion.
+
+## Correctness beyond append
+An event log is not correct merely because it accepts appends.
+
+Correct event-sourced systems also need:
+
+- stale-writer detection,
+- replay validation,
+- schema evolution,
+- projection failure semantics,
+- migration and deletion policy.
+
+A write to an existing fiber should be checked against the current fiber head or equivalent version marker. Consumers should assume at-least-once delivery unless a higher layer atomically stores both projection state and cursor progress.
 
 ## Dragline datastructure
 A Dragline is an array created from one or more interleaved fibers. Events have header fields and a payload called DomainEvent. Events also has an implicit index which is their position on the array. Between migrations the array is locked in an append-only-log mode of operation. This guarantees full preservation of history between migrations. The singly linked list of each `FiberId` is intended to help identifying a fiber in the Dragline without a full scan for the `FiberId`. This is intended to help any type of read operation for any `FiberId` to be near optimal in terms of speed and resource consumption, assuming a power law distribution of fiber lengths.
