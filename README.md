@@ -89,7 +89,7 @@ For each fiber that is not detached the default migration is "Keep". TODO: Prune
 Migrations that exclusively does keep-migrations do not require reindexing of the Dragline. These may still do schema upgrades. All other migrations will require Dragline reindexing, which means moving events up the Dragline as free indexes are created and updating all precursors to the new indexes of the previous events in the fibers.
 
 ## Statemachine
-NOTE: state `Purged` can be eliminated by consollidating into state ´Undefined`. Transition "Rescue()" from state `Locked` is no longer needed as we have properly decoupled DomainID from FiberID in new design.
+NOTE: state `PURGED` can be eliminated by consollidating into state `UNDEFINED`. Transition `Rescue()` from state `LOCKED` is no longer needed as we have properly decoupled DomainID from FiberID in new design.
 
 ![Statemachine.png](Images%2FStatemachine.png)
 
