@@ -27,7 +27,7 @@ The most fundamental building block in fiber semantics is the event. Event is a 
 
 Immutable fields in the event header still may get purged or pruned together with the complete event during migrations. The other header fields will get updated during migrations. The DomainEvent payload is only mutated during migrations with schema upgrades.
 
-## Application causality keys
+## Application identity and causality keys
 An application may choose a **causality key**: a domain value used to decide which fiber or fibers are relevant for a business concept.
 
 Examples:
@@ -64,6 +64,13 @@ DeviceId -> current telemetry fiber
 ```
 
 The index is not an independent source of truth. It is derived from, or checked against, the append-only log. If an index becomes inconsistent, the log wins and the index must be rebuilt or rejected.
+
+## Read views
+Pardosa distinguishes three read views:
+- **fiber history** — replay one log-local fiber;
+- **causal chain** — walk same-fiber precursor links from a known head event;
+- **cursor tail** — consume the global log line with ACK/resume state.
+These views are intentionally not interchangeable. Cursor progress is not fiber history, not causal history, and not evidence of per-fiber completion.
 
 ## Dragline datastructure
 A Dragline is an array created from one or more interleaved fibers. Events have header fields and a payload called DomainEvent. Events also has an implicit index which is their position on the array. Between migrations the array is locked in an append-only-log mode of operation. This guarantees full preservation of history between migrations. The singly linked list of each `FiberId` is intended to help identifying a fiber in the Dragline without a full scan for the `FiberId`. This is intended to help any type of read operation for any `FiberId` to be near optimal in terms of speed and resource consumption, assuming a power law distribution of fiber lengths.
