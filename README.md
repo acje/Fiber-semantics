@@ -20,9 +20,10 @@ Multiple fibers can be stored and shared through a datastructure called a `Dragl
 
 The most fundamental building block in fiber semantics is the event. Event is a message containing a fact, something that has happened. Events are distinct from commands which may require a response of success or failure because they command something that should happen in the future. Note: In Fiber semantics query is a command which only does read type operations, query can also fail and the response is not optional. Events have a header with the following core concepts:
 
-- ``FiberId`` is the unique identifier of a series of connected events conserning an entity, activity or property in the domain. Application must choose mapping.
+- ``FiberId`` is the Dragline local unique identifier of a series of connected events conserning an entity, activity or property in the domain. Application must choose mapping.
 - Detached marks the fiber as soft deleted. Migrations can keep, purge or lock a detached fiber of a `FiberId`.
-- Precursor forms fibers by chaining events with the same `FiberId` in a singly linked list.
+- `Precursor` is a reference to the previous event in the same fiber, used
+for same-fiber replay validation.
 - DomainEvent is the domain specific payload of the event.
 
 Immutable fields in the event header still may get purged or pruned together with the complete event during migrations. The other header fields will get updated during migrations. The DomainEvent payload is only mutated during migrations with schema upgrades.
